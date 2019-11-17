@@ -9,7 +9,7 @@ var pool = mysql.createPool({
     connectionLimit : 10, // default = 10
     host            : '127.0.0.1',
     user            : 'root',
-    password        : 'abc123',
+    password        : 'toor',
     database        : 'iith_ems'
 });
 
@@ -36,11 +36,13 @@ router.use(function(req, res, next) {
 	// pool.query(`INSERT INTO data(x, y) SELECT max(x) + 1, ${y} FROM data;`, (err, res) => { console.log(err, res) });
 	
 	const query = `
-		SELECT total_active_power as y, row2, date as x
+		SELECT  * 
+		FROM (SELECT total_active_power as y, row2, date as x
 		FROM sensorreadings
 		WHERE row2 = ${pool.escape(req.query.panel)}
 		ORDER BY date DESC
-		LIMIT 560
+		LIMIT 560) AS a
+		ORDER BY x ASC
 	`;
 	pool.query(query, (err, result) => {
 		if (err) console.log(err);

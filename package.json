@@ -3,16 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@nivo/bar": "^0.59.2",
+    "@nivo/line": "^0.59.3",
+    "@nivo/sankey": "^0.59.1",
     "ant-design-pro": "^2.3.2",
     "antd": "^3.24.1",
     "babel-loader": "^8.0.6",
+    "body-parser": "^1.19.0",
+    "canvasjs": "^1.8.1",
     "moment": "^2.24.0",
     "mysql": "^2.17.1",
+    "node-cmd": "^3.0.0",
     "numeral": "^2.0.6",
     "react": "^16.10.2",
+    "react-canvas-js": "^1.0.1",
     "react-dom": "^16.10.2",
+    "react-google-charts": "^3.0.15",
     "react-scripts": "3.2.0",
-    "superagent": "^5.1.0"
+    "react-vis": "^1.11.7",
+    "recharts": "^1.8.5",
+    "superagent": "^5.1.0",
+    "tcp-proxy": "^0.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
