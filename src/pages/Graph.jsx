@@ -22,8 +22,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
-const dateFormatter = item => moment(item).format("HH:MM");
-const timeFormatter = item => moment(item).format("HH:MM:SS");
+const dateFormatter = item => moment(item).format("HH:mm");
+const timeFormatter = item => moment(item).format("DD-MM HH:mm:ss");
 
 class CustomizedAxisTick extends React.Component {
   render() {
@@ -76,7 +76,7 @@ class Graph extends React.Component  {
   }
 
   _refreshData() {
-    Request.get('http://localhost:8080').query(`panel=${this.state.activePanel}`).then((res) => {
+    Request.get('http://387931ee.ngrok.io').query(`panel=${this.state.activePanel}`).then((res) => {
       console.log(res.body);
       var max = Math.max.apply(Math, res.body.map(function(o) { return o.y; }));
       var min = Math.min.apply(Math, res.body.map(function(o) { return o.y; }));
@@ -137,7 +137,7 @@ class Graph extends React.Component  {
     setInterval(async () => {
       if (!this.state.autoload) return;
       Request
-        .get('http://localhost:8080')
+        .get('http://387931ee.ngrok.io')
         .query(`panel=${this.state.activePanel}`)
         .then((res) => {
           console.log(res.body);

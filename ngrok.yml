@@ -1,0 +1,9 @@
+authtoken: 1TpHqbYeKirrwg6KmUHED91OiC7_3vZ3hbCJ4mm2MK3H8J5Zw 
+
+tunnels:
+  webapp:
+    proto: http
+    addr: 3000
+  api:
+    proto: http
+    addr: 8080
