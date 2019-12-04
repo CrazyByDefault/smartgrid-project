@@ -1,5 +1,5 @@
-
 import React from "react";
+import ReactQueryParams from 'react-query-params';
 import moment from "moment";
 import { ResponsiveLine } from '@nivo/line';
 import {
@@ -7,7 +7,8 @@ import {
   Col,
   Statistic,
   Icon,
-  Cascader
+  Cascader,
+  Typography
 } from "antd";
 import { MiniArea, ChartCard } from "ant-design-pro/lib/Charts";
 import NumberInfo from 'ant-design-pro/lib/NumberInfo';
@@ -18,12 +19,18 @@ import 'antd/es/input/style/index.css';
 import 'antd/es/select/style/index.css';
 import 'antd/es/cascader/style/index.css';
 import Chart from 'react-google-charts';
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
+import Loader from 'react-loader-spinner';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
 const dateFormatter = item => moment(item).format("HH:mm");
 const timeFormatter = item => moment(item).format("DD-MM HH:mm:ss");
+
+const { Title, Paragraph } = Typography;
+
+const apiUrl = "http://d7cc6552.ngrok.io";
 
 class CustomizedAxisTick extends React.Component {
   render() {
@@ -52,23 +59,19 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-class Graph extends React.Component  {
+class Graph extends ReactQueryParams  {
   constructor(props, context) {
     super(props, context);
-    this.state = {
-      data:  [
-        [0, 8],
-        [1, 5],
-        [2, 4],
-        [3, 9],
-        [4, 1],
-        [5, 7],
-        [6, 6],
-        [7, 3],
-        [8, 2],
-        [9, 0]
-      ]
-    };
+    const value = this.queryParams.panel;
+    if (this.queryParams.panel) {
+      this.state = {
+        activePanel: this.queryParams.panel,
+        autoload: true
+      };
+    } else {
+      this.state = {};
+    }
+    console.log("PARAM", value);
   }
 
   componentWillMount() {
@@ -76,14 +79,137 @@ class Graph extends React.Component  {
   }
 
   _refreshData() {
-    Request.get('http://387931ee.ngrok.io').query(`panel=${this.state.activePanel}`).then((res) => {
+    Request.get(`${apiUrl}`).query(`panel=${this.state.activePanel}`).then((res) => {
       console.log(res.body);
-      var max = Math.max.apply(Math, res.body.map(function(o) { return o.y; }));
-      var min = Math.min.apply(Math, res.body.map(function(o) { return o.y; }));
-      console.log(max);
-      this.setState({ data: res.body, autoload: true, render: true, max: max, min:min });
+      const data = res.body;
+      data.max = Math.max.apply(Math, res.body.map(function(o) { return o.y; }));
+      data.min = Math.min.apply(Math, res.body.map(function(o) { return o.y; }));
+      this.setState({ data });
     });
     // setTimeout(_refreshData(), 2*1000);
+  }
+
+  _fetchVoltage() {
+    Request.get(`${apiUrl}/voltage`).query(`panel=${this.state.activePanel}`).then((res) => {
+      console.log(res.body);
+      const voltage = res.body;
+      let maxR, maxY, maxB;
+      maxR = Math.max.apply(Math, res.body.map(function(o) { return o.r; }));
+      maxY = Math.max.apply(Math, res.body.map(function(o) { return o.y; }));
+      maxB = Math.max.apply(Math, res.body.map(function(o) { return o.b; }));
+      voltage.max = Math.max(maxR, maxY, maxB);
+
+      let minR, minY, minB;
+      minR = Math.min.apply(Math, res.body.map(function(o) { return o.r; }));
+      minY = Math.min.apply(Math, res.body.map(function(o) { return o.y; }));
+      minB = Math.min.apply(Math, res.body.map(function(o) { return o.b; }));
+      voltage.min = Math.min(minR, minY, minB);
+      this.setState({ voltage });
+    });
+  }
+
+  _fetchCurrent() {
+    Request.get(`${apiUrl}/current`).query(`panel=${this.state.activePanel}`).then((res) => {
+      console.log(res.body);
+      let maxR, maxY, maxB;
+      const current = res.body;
+      maxR = Math.max.apply(Math, res.body.map(function(o) { return o.r; }));
+      maxY = Math.max.apply(Math, res.body.map(function(o) { return o.y; }));
+      maxB = Math.max.apply(Math, res.body.map(function(o) { return o.b; }));
+      current.max = Math.max(maxR, maxY, maxB);
+
+      let minR, minY, minB;
+      minR = Math.min.apply(Math, res.body.map(function(o) { return o.r; }));
+      minY = Math.min.apply(Math, res.body.map(function(o) { return o.y; }));
+      minB = Math.min.apply(Math, res.body.map(function(o) { return o.b; }));
+      current.min = Math.min(minR, minY, minB);
+      this.setState({ current });
+    });
+  }
+
+  _fetchPower() {
+    Request.get(`${apiUrl}/power`).query(`panel=${this.state.activePanel}`).then((res) => {
+      console.log(res.body);
+      const power = res.body;
+      let maxR, maxY, maxB;
+      maxR = Math.max.apply(Math, res.body.map(function(o) { return o.r; }));
+      maxY = Math.max.apply(Math, res.body.map(function(o) { return o.y; }));
+      maxB = Math.max.apply(Math, res.body.map(function(o) { return o.b; }));
+      power.max = Math.max(maxR, maxY, maxB);
+
+      let minR, minY, minB;
+      minR = Math.min.apply(Math, res.body.map(function(o) { return o.r; }));
+      minY = Math.min.apply(Math, res.body.map(function(o) { return o.y; }));
+      minB = Math.min.apply(Math, res.body.map(function(o) { return o.b; }));
+      power.min = Math.min(minR, minY, minB);
+
+      this.setState({ power });
+    });
+  }
+
+  _fetchPF() {
+    Request.get(`${apiUrl}/pf`).query(`panel=${this.state.activePanel}`).then((res) => {
+      console.log(res.body);
+      const pf = res.body;
+      pf.max = 1.25;
+      pf.min = -1.25;
+      this.setState({ pf });
+    });
+  }
+
+  _fetchCE() {
+    Request.get(`${apiUrl}/ce`).query(`panel=${this.state.activePanel}`).then((res) => {
+      console.log(res.body);
+      const ce = res.body;
+      ce.max = Math.max.apply(Math, res.body.map(function(o) { return o.y; }));
+      ce.min = Math.min.apply(Math, res.body.map(function(o) { return o.y; }));
+      const ceFinal = ce.map((item, i) => {
+        const newItem = {};
+        newItem.x = item.x;
+        newItem.y = i === 0 ? 0 : item.y - ce[i-1].y;
+        newItem.row2 = item.row2;
+        return newItem;
+      });
+      this.setState({ ce: ceFinal });
+    });
+  }
+
+  _renderGraph(dataSource, stroke, unit) {
+    // const stroke = '#'+Math.floor(Math.random()*16777215).toString(16);
+    console.log("rendering ", dataSource, " graph");
+    return (
+      <ResponsiveContainer width="98%" height={250} style={{ marginRight: 0 }}>
+        <LineChart
+          data={this.state[dataSource]}
+          margin={{ top: 15, bottom: 15, left: 5, right: 5 }}
+        >
+          <XAxis dataKey="x" tickFormatter={dateFormatter} tick={<CustomizedAxisTick />}/>
+          <YAxis unit={unit} type="number" domain={[this.state[dataSource].min, this.state[dataSource].max]} scale="linear"/>
+          <Tooltip content={<CustomTooltip />} />
+          <Line dataKey="y" stroke={stroke} dot={false}/>
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  _renderGraphMultiline(dataSource, unit) {
+    // const stroke = '#'+Math.floor(Math.random()*16777215).toString(16);
+    console.log("rendering ", dataSource, " graph");
+    return (
+      <ResponsiveContainer width="98%" height={250} style={{ marginRight: 0 }}>
+        <LineChart
+          data={this.state[dataSource]}
+          margin={{ top: 15, bottom: 15, left: 5, right: 5 }}
+        >
+          <XAxis dataKey="x" tickFormatter={dateFormatter} tick={<CustomizedAxisTick />}/>
+          <YAxis unit={unit} type="number" domain={[this.state[dataSource].min, this.state[dataSource].max]} scale="linear"/>
+          <Tooltip content={<CustomTooltip />} />
+          <Line dataKey="r" stroke="red" dot={false}/>
+          <Line dataKey="y" stroke="green" dot={false}/>
+          <Line dataKey="b" stroke="blue" dot={false}/>
+        </LineChart>
+      </ResponsiveContainer>
+    );
   }
 
 
@@ -91,42 +217,55 @@ class Graph extends React.Component  {
     console.log(options);
     return (
       <div>
-        <Row justify="center">
-          <Col span={24} justify="center">
-            <ChartCard title="SmartGrid Project" contentHeight={134} style={{ maxWidth: "65vw", margin: "auto" }} >
-                <NumberInfo
-                  subTitle={<span>{ this.state.activePanel ? this.state.activePanel : "Select a Panel" }</span>}
-                  total={this.state.data[this.state.data.length-1] ? this.state.data[this.state.data.length-1].y : 0}
-                  // status="up"
-                  // subTotal={17.1}
-                />
-                <Cascader
-                  options={options}
-                  style={{ width: 275, textAlign: "left" }}
-                  onChange={(value) => {
-                    console.log(value[2]);
-                    this.setState({ activePanel: value[2] }, () => {
-                      this._refreshData();
-                    });
-                  }}
-                />
-                { this.state.render ? 
-                  <LineChart
-                    width={1080}
-                    height={250}
-                    data={this.state.data}
-                    margin={{
-                      top: 20, right: 30, left: 20, bottom: 25,
-                    }}
-                  >
-                    <XAxis dataKey="x" tickFormatter={dateFormatter} tick={<CustomizedAxisTick />}/>
-                    <YAxis type="number" domain={[this.state.min, this.state.max]} scale="linear"/>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Line dataKey="y" stroke="#8884d8" dot={false}/>
-                  </LineChart>
-                  : null
-                }
-            </ChartCard>
+        <Row gutter={32}>
+          <Title level={2}>Acad Block A or something</Title>
+          {/*<Cascader
+            options={options}
+            style={{ width: 350, maxWidth: 575, textAlign: "left", marginTop: 10, marginBottom: 15 }}
+            onChange={(value) => {
+              console.log(value[2]);
+              this.setState({ activePanel: value[2], autoload: true }, () => {
+                this._refreshData();
+              });
+            }}
+          />*/}
+        </Row>
+        <Row>
+          <Col span={12}>
+            <Title level={4} style={{ marginTop: 10, marginBottom: 0 }}>Power</Title>
+            {
+              this.state.power ? this._renderGraphMultiline('power', 'KWh') : <Loader type="Puff" color="grey" height={40} width={40} />
+            }
+          </Col>
+          <Col span={12}>
+            <Title level={4} style={{ marginTop: 10, marginBottom: 0 }}>Voltage</Title>
+            {
+              this.state.voltage ? this._renderGraphMultiline('voltage', 'V') : <Loader type="Puff" color="grey" height={40} width={40} />
+            }
+          </Col>
+          <Col span={12}>
+            <Title level={4} style={{ marginTop: 10, marginBottom: 0 }}>Current</Title>
+            {
+              this.state.current ? this._renderGraphMultiline('current', 'A') : <Loader type="Puff" color="grey" height={40} width={40} />
+            }
+          </Col>
+          <Col span={12}>
+            <Title level={4} style={{ marginTop: 10, marginBottom: 0 }}>Energy</Title>
+            {
+              this.state.ce ? this._renderGraph('ce', 'DeepPink', 'KW') : <Loader type="Puff" color="grey" height={40} width={40} />
+            }
+          </Col>
+          <Col span={12}>
+            <Title level={4} style={{ marginTop: 10, marginBottom: 0 }}>Power Factor</Title>
+            {
+              this.state.pf ? this._renderGraph('pf', 'black', '') : <Loader type="Puff" color="grey" height={40} width={40} />
+            }
+          </Col>
+          <Col span={12}>
+            <Title level={4} style={{ marginTop: 10, marginBottom: 0 }}>Total Power</Title>
+            {
+              this.state.data ? this._renderGraph('data', 'DarkTurquoise', 'KWh') : <Loader type="Puff" color="grey" height={40} width={40} />
+            }
           </Col>
         </Row>
       </div>
@@ -136,14 +275,13 @@ class Graph extends React.Component  {
   componentDidMount() {
     setInterval(async () => {
       if (!this.state.autoload) return;
-      Request
-        .get('http://387931ee.ngrok.io')
-        .query(`panel=${this.state.activePanel}`)
-        .then((res) => {
-          console.log(res.body);
-
-          this.setState({ data: res.body });
-        });
+      this._refreshData();
+      this._fetchCE();
+      this._fetchVoltage();
+      this._fetchPower();
+      this._fetchCurrent();
+      this._fetchPF();
+      console.log("POWER", this.state['power']);
     }, 5*1000);
   }
 
