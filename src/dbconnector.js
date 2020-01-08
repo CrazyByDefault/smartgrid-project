@@ -14,6 +14,15 @@ var pool = mysql.createPool({
     database        : 'iith_ems'
 });
 
+var gannaPool = mysql.createPool({
+    connectionLimit : 10, // default = 10
+    host            : '127.0.0.1',
+    port            : '10001',
+    user            : 'bms',
+    password        : 'Sglab_1234',
+    database        : 'IITH_SS_data'
+});
+
 var server = tcp.createServer({
   target: {
     host: '127.0.0.1',
@@ -50,7 +59,7 @@ router.use(function(req, res, next) {
   pool.query(query, (err, result) => {
     if (err) console.log(err);
     console.log(result);
-      res.send(result);
+    res.send(result);
   })
     console.log('Something is happening.');
 });
@@ -69,7 +78,7 @@ app.get('/', function (req, res, next) {
     pool.query(query, (err, result) => {
       if (err) console.log(err);
       console.log(result);
-        res.send(result);
+      res.send(result);
     })
       console.log('Something is happening.');
 });
@@ -87,7 +96,7 @@ app.get('/voltage', function (req, res, next) {
   pool.query(query, (err, result) => {
     if (err) console.log(err);
     console.log(result);
-      res.send(result);
+    res.send(result);
   })
     console.log('Something is happening.');
 });
@@ -105,7 +114,7 @@ app.get('/current', function (req, res, next) {
   pool.query(query, (err, result) => {
     if (err) console.log(err);
     console.log(result);
-      res.send(result);
+    res.send(result);
   })
     console.log('Something is happening.');
 });
@@ -123,7 +132,7 @@ app.get('/power', function (req, res, next) {
   pool.query(query, (err, result) => {
     if (err) console.log(err);
     console.log(result);
-      res.send(result);
+    res.send(result);
   })
     console.log('Something is happening.');
 });
@@ -141,7 +150,7 @@ app.get('/pf', function (req, res, next) {
   pool.query(query, (err, result) => {
     if (err) console.log(err);
     console.log(result);
-      res.send(result);
+    res.send(result);
   })
     console.log('Something is happening.');
 });
@@ -159,10 +168,49 @@ app.get('/ce', function (req, res, next) {
   pool.query(query, (err, result) => {
     if (err) console.log(err);
     console.log(result);
-      res.send(result);
+    res.send(result);
   })
     console.log('Something is happening.');
 });
+
+
+function fetchDataOfOneMeter(meterID) {
+  return new Promise((resolve, reject) => {
+    const testQ = `SELECT meterID, tstamp as time, CAST(Ptot AS DECIMAL(10,2)) as Ptot FROM SS_ems WHERE meterID=${gannaPool.escape(meterID)} ORDER BY tstamp DESC LIMIT 1`;
+
+    gannaPool.query(testQ, (err, result) => {
+      if (err) {
+        reject(err);
+        console.log(err);
+      }
+      resolve(result[0]);
+      console.log(result);
+    });
+  });
+}
+
+app.get('/ganna', function (req, res, next) {
+  const mid = [2, 3, 6, 7, 8, 9, 11, 12, 14, 16, 17, 1, 24, 23, 25, 26];
+  const queries = [];
+
+  mid.forEach((meterID, i) => {
+    console.log("PUSHING", meterID, i);
+    queries.push(fetchDataOfOneMeter(meterID));
+  })
+
+  Promise.all(queries).then((vals) => {
+    console.log("EXECUTED ALL", vals);
+    const temp = {};
+    vals.forEach((data, i) => {
+      temp[data.meterID] = {};
+      temp[data.meterID].time = data.time;
+      temp[data.meterID].Ptot = data.Ptot;
+    });
+    console.log("PARSED", temp);
+    res.send(temp);
+  });
+});
+
 
 app.listen(port);
 console.log('Magic happens on port ' + port);
